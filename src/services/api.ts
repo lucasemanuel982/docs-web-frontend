@@ -1,8 +1,6 @@
 import { LoginRequest, RegisterRequest, AuthResponse, ApiResponse } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://docs-web-backend.onrender.com/api';
-// const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://docs-web-backend-eta.vercel.app/api';
-// const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3333/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3333/api';
 
 class ApiService {
   private baseURL: string;
