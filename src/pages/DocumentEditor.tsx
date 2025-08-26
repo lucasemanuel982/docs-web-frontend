@@ -28,7 +28,7 @@ const DocumentEditor: React.FC = () => {
   const { emit, on, off, connect, disconnect, isConnected } = useSocket();
   const navigate = useNavigate();
   const textareaRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<number>();
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
 
   // Redireciona automaticamente após 3 segundos se o modal estiver aberto
   useEffect(() => {
