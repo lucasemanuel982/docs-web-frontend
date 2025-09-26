@@ -16,9 +16,13 @@ import { MultipleTabsProvider } from './components/MultipleTabsProvider';
 import { DocumentsMultipleTabsProvider } from './components/DocumentsMultipleTabsProvider';
 import Support from './pages/Support';
 import Pricing from './pages/Pricing';
+import { usePing } from './hooks/usePing';
 import './App.css';
 
 function App() {
+  // Iniciar o ping automático a cada 40 segundos devido ao render
+  usePing(40000);
+
   return (
     <AuthProvider>
       <MultipleTabsProvider>
