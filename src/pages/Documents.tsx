@@ -57,37 +57,60 @@ const Documents: React.FC = () => {
   const { user, logout, token } = useAuth();
   const navigate = useNavigate();
 
-  // Carregar documentos via REST
-  const fetchDocuments = async () => {
-    setIsLoading(true);
+  // Função utilitária para fazer chamadas de API
+  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://docs-web-backend.onrender.com/api';
+    const url = `${apiUrl}${endpoint}`;
+    
+    const config: RequestInit = {
+      mode: 'cors',
+      credentials: 'omit',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    };
+
+    console.log(`Fazendo requisição para: ${url}`);
+    console.log('Configuração:', config);
+    
     try {
-      console.log('Fazendo requisição para /api/documents com token:', token ? 'presente' : 'ausente');
-      
-      const response = await fetch('/api/documents', {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      console.log('Resposta recebida:', response.status, response.statusText);
+      const response = await fetch(url, config);
+      console.log(`Resposta recebida: ${response.status} ${response.statusText}`);
+      console.log('Headers da resposta:', Object.fromEntries(response.headers.entries()));
       
       // Verificar se a resposta é JSON
       const contentType = response.headers.get('content-type');
+      console.log('Content-Type:', contentType);
+      
       if (!contentType || !contentType.includes('application/json')) {
         const text = await response.text();
-        console.error('Resposta não é JSON:', text.substring(0, 200));
-        throw new Error('Servidor retornou resposta inválida. Verifique se o servidor está rodando corretamente.');
+        console.error('Resposta não é JSON:', text.substring(0, 500));
+        throw new Error(`Servidor retornou resposta inválida (${response.status}). Tipo de conteúdo: ${contentType}`);
       }
       
       const data = await response.json();
       console.log('Dados recebidos:', data);
       
-      if (response.ok) {
-        setDocuments(data.documents || []);
-      } else {
-        throw new Error(data.message || 'Erro ao carregar documentos');
+      if (!response.ok) {
+        throw new Error(data.message || `Erro na requisição (${response.status})`);
       }
+      
+      return data;
+    } catch (error) {
+      console.error('Erro na requisição fetch:', error);
+      throw error;
+    }
+  };
+
+  // Carregar documentos via REST
+  const fetchDocuments = async () => {
+    setIsLoading(true);
+    try {
+      const data = await apiCall('/documents');
+      setDocuments(data.documents || []);
     } catch (error: any) {
       console.error('Erro ao carregar documentos:', error);
       toast.error(error.message || 'Erro ao carregar documentos');
@@ -103,29 +126,9 @@ const Documents: React.FC = () => {
   const handleDeleteDocument = async (docId: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/documents/${docId}`, {
-        method: 'DELETE',
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      // Verificar se a resposta é JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const text = await response.text();
-        console.error('Resposta não é JSON:', text.substring(0, 200));
-        throw new Error('Servidor retornou resposta inválida.');
-      }
-      
-      const data = await response.json();
-      if (response.ok) {
-        setDocuments(prev => prev.filter(doc => doc._id !== docId));
-        toast.success(data.message || 'Documento deletado com sucesso!');
-      } else {
-        throw new Error(data.message || 'Erro ao deletar documento');
-      }
+      const data = await apiCall(`/documents/${docId}`, { method: 'DELETE' });
+      setDocuments(prev => prev.filter(doc => doc._id !== docId));
+      toast.success(data.message || 'Documento deletado com sucesso!');
     } catch (error: any) {
       console.error('Erro ao deletar documento:', error);
       toast.error(error.message || 'Erro ao deletar documento');
@@ -145,37 +148,20 @@ const Documents: React.FC = () => {
   const handlePermissionsChange = async (newReadPermissions: string[], newEditPermissions: string[]) => {
     if (selectedDocumentForPermissions) {
       try {
-        const response = await fetch(`/api/documents/${selectedDocumentForPermissions._id}/permissions`, {
+        const data = await apiCall(`/documents/${selectedDocumentForPermissions._id}/permissions`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
           body: JSON.stringify({
             readPermissions: newReadPermissions,
             editPermissions: newEditPermissions
           })
         });
         
-        // Verificar se a resposta é JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          const text = await response.text();
-          console.error('Resposta não é JSON:', text.substring(0, 200));
-          throw new Error('Servidor retornou resposta inválida.');
-        }
-        
-        const data = await response.json();
-        if (response.ok) {
-          toast.success(data.message || 'Permissões atualizadas com sucesso!');
-          setDocuments(prev => prev.map(doc =>
-            doc._id === selectedDocumentForPermissions._id
-              ? { ...doc, readPermissions: newReadPermissions, editPermissions: newEditPermissions }
-              : doc
-          ));
-        } else {
-          throw new Error(data.message || 'Erro ao atualizar permissões');
-        }
+        toast.success(data.message || 'Permissões atualizadas com sucesso!');
+        setDocuments(prev => prev.map(doc =>
+          doc._id === selectedDocumentForPermissions._id
+            ? { ...doc, readPermissions: newReadPermissions, editPermissions: newEditPermissions }
+            : doc
+        ));
       } catch (error: any) {
         console.error('Erro ao atualizar permissões:', error);
         toast.error(error.message || 'Erro ao atualizar permissões');
@@ -191,12 +177,8 @@ const Documents: React.FC = () => {
     }
     setIsLoading(true);
     try {
-      const response = await fetch('/api/documents', {
+      await apiCall('/documents', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({
           title: newDocumentTitle,
           readPermissions,
@@ -204,24 +186,11 @@ const Documents: React.FC = () => {
         })
       });
       
-      // Verificar se a resposta é JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const text = await response.text();
-        console.error('Resposta não é JSON:', text.substring(0, 200));
-        throw new Error('Servidor retornou resposta inválida.');
-      }
-      
-      const data = await response.json();
-      if (response.ok) {
-        setNewDocumentTitle('');
-        setShowCreateForm(false);
-        toast.success('Documento criado com sucesso!');
-        // Recarrega a lista para garantir que os dados estejam todos corretos
-        fetchDocuments();
-      } else {
-        throw new Error(data.message || 'Erro ao criar documento');
-      }
+      setNewDocumentTitle('');
+      setShowCreateForm(false);
+      toast.success('Documento criado com sucesso!');
+      // Recarrega a lista para garantir que os dados estejam todos corretos
+      fetchDocuments();
     } catch (error: any) {
       console.error('Erro ao criar documento:', error);
       toast.error(error.message || 'Erro ao criar documento');
