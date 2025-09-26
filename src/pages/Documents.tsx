@@ -61,16 +61,35 @@ const Documents: React.FC = () => {
   const fetchDocuments = async () => {
     setIsLoading(true);
     try {
+      console.log('Fazendo requisição para /api/documents com token:', token ? 'presente' : 'ausente');
+      
       const response = await fetch('/api/documents', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
+      
+      console.log('Resposta recebida:', response.status, response.statusText);
+      
+      // Verificar se a resposta é JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Resposta não é JSON:', text.substring(0, 200));
+        throw new Error('Servidor retornou resposta inválida. Verifique se o servidor está rodando corretamente.');
+      }
+      
       const data = await response.json();
+      console.log('Dados recebidos:', data);
+      
       if (response.ok) {
-        setDocuments(data.documents);
+        setDocuments(data.documents || []);
       } else {
         throw new Error(data.message || 'Erro ao carregar documentos');
       }
     } catch (error: any) {
+      console.error('Erro ao carregar documentos:', error);
       toast.error(error.message || 'Erro ao carregar documentos');
     } finally {
       setIsLoading(false);
@@ -86,8 +105,20 @@ const Documents: React.FC = () => {
     try {
       const response = await fetch(`/api/documents/${docId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
+      
+      // Verificar se a resposta é JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Resposta não é JSON:', text.substring(0, 200));
+        throw new Error('Servidor retornou resposta inválida.');
+      }
+      
       const data = await response.json();
       if (response.ok) {
         setDocuments(prev => prev.filter(doc => doc._id !== docId));
@@ -96,6 +127,7 @@ const Documents: React.FC = () => {
         throw new Error(data.message || 'Erro ao deletar documento');
       }
     } catch (error: any) {
+      console.error('Erro ao deletar documento:', error);
       toast.error(error.message || 'Erro ao deletar documento');
     } finally {
       setIsLoading(false);
@@ -124,6 +156,15 @@ const Documents: React.FC = () => {
             editPermissions: newEditPermissions
           })
         });
+        
+        // Verificar se a resposta é JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text();
+          console.error('Resposta não é JSON:', text.substring(0, 200));
+          throw new Error('Servidor retornou resposta inválida.');
+        }
+        
         const data = await response.json();
         if (response.ok) {
           toast.success(data.message || 'Permissões atualizadas com sucesso!');
@@ -136,6 +177,7 @@ const Documents: React.FC = () => {
           throw new Error(data.message || 'Erro ao atualizar permissões');
         }
       } catch (error: any) {
+        console.error('Erro ao atualizar permissões:', error);
         toast.error(error.message || 'Erro ao atualizar permissões');
       }
     }
@@ -161,6 +203,15 @@ const Documents: React.FC = () => {
           editPermissions
         })
       });
+      
+      // Verificar se a resposta é JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Resposta não é JSON:', text.substring(0, 200));
+        throw new Error('Servidor retornou resposta inválida.');
+      }
+      
       const data = await response.json();
       if (response.ok) {
         setNewDocumentTitle('');
@@ -172,6 +223,7 @@ const Documents: React.FC = () => {
         throw new Error(data.message || 'Erro ao criar documento');
       }
     } catch (error: any) {
+      console.error('Erro ao criar documento:', error);
       toast.error(error.message || 'Erro ao criar documento');
     } finally {
       setIsLoading(false);

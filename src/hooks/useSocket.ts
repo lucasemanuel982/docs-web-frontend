@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { SocketEvents } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:3333';
+const SOCKET_URL = import.meta.env.VITE_API_URL_SOCKET || 'http://localhost:3333';
 
 export function useSocket() {
   const socketRef = useRef<Socket | null>(null);
