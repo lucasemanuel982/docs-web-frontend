@@ -16,9 +16,13 @@ import { MultipleTabsProvider } from './components/MultipleTabsProvider';
 import { DocumentsMultipleTabsProvider } from './components/DocumentsMultipleTabsProvider';
 import Support from './pages/Support';
 import Pricing from './pages/Pricing';
+import { useKeepAlive } from './hooks/useKeepAlive';
 import './App.css';
 
 function App() {
+  // Manter servidor ativo com requisições a cada 40 segundos
+  useKeepAlive(40000);
+
   return (
     <AuthProvider>
       <MultipleTabsProvider>

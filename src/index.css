@@ -121,11 +121,7 @@ body {
 
   /* Hero section customizada */
   .hero-section {
-    background-image: linear-gradient(
-        rgba(0, 0, 0, 0.1) 0%,
-        rgba(0, 0, 0, 0.4) 100%
-      ),
-      url("https://lh3.googleusercontent.com/aida-public/AB6AXuBhVPntLsCHxDqSzHLZnSNe5OE197gYGv2uJSXT7jZ_kt9_4wChmnqaf0M3B5qcCs8Owa5Li3J3PrFHWGtJlixef6zW_olhO_LKLyO274PPILsxfDKnelICBdhn82Y745fKBG1G38o2AHrTzHyusTRhRkdw_lbrGKfqPgrsz_KSYZ7xio6HXeua7uSZCN9m_nwBHDvpXnoC9aAJJLXl6nKpdr_rc2cKSI5SBB-uP3CTttMvJNuP_xmHUIr_k9oDIV2r29DsMC4EgBE");
+    background: #191923;
     background-size: cover;
     background-position: center;
     min-height: 480px;

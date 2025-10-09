@@ -87,6 +87,12 @@ class ApiService {
       method: 'GET',
     });
   }
+
+  async ping(): Promise<ApiResponse<{ message: string }>> {
+    return this.request<{ message: string }>('/ping', {
+      method: 'GET',
+    });
+  }
 }
 
 export const apiService = new ApiService(); 
